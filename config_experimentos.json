@@ -1,0 +1,9 @@
+{
+  "fracciones_interceptacion": [0, 0.1, 0.25, 0.5, 1.0],
+  "qber_basal_objetivo": [0, 0.01, 0.03],
+  "muestras": [64, 256, 1024],
+  "sesiones_por_combinacion": 300,
+  "semilla_maestra": 2026,
+  "deteccion_objetivo": 0.9,
+  "falsas_alarmas_maximas": 0.05
+}
