@@ -27,7 +27,11 @@ if missing:
 
 df["eve_present"] = df["eve_fraction"] > 0
 
-COLORS = {0.01: "tab:blue", 0.03: "tab:orange"}
+COLORS = {
+    0.0: "tab:green",
+    0.01: "tab:blue",
+    0.03: "tab:orange",
+}
 SAMPLES = sorted(df["sample_size"].unique())
 BASELINES = sorted(df["baseline_qber"].unique())
 
