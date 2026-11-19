@@ -1,62 +1,117 @@
+
 # Proyecto BB84
 
 **Detección de interceptación parcial en BB84 bajo ruido y muestras finitas.**
 
 Proyecto de Computación Cuántica y Criptografía, Universidad de los Andes.
 
-Integrantes:
+## Integrantes
 
 - Juan Francisco Rodriguez
 - Daniel Alfonso Rudas Bohorquez
 - Tomas Camilo Ostos
 
-Queremos estudiar cuántos bits de muestra necesitan Alice y Bob para detectar a
-Eve cuando ella intercepta una parte de las señales y el canal también produce
-errores normales.
+## Objetivo
 
-## Qué está listo
+Estudiar cuántos bits de muestra necesitan Alice y Bob para detectar
+a Eve cuando intercepta una fracción de las señales cuánticas y el
+canal también introduce errores normales.
 
-Esta es la base de Juan: BB84 ideal con Qiskit Aer, preparación y medición en
-bases Z y X, cribado, cálculo de QBER y selección de una muestra pública.
-Incluye una demostración y pruebas del caso ideal.
+El proyecto implementa el protocolo BB84 mediante Qiskit Aer,
+incorpora un ataque intercept-resend, simula ruido del canal y
+utiliza una prueba estadística sobre el QBER para identificar
+errores superiores al nivel basal esperado.
 
-Quedan para las otras partes del equipo: interceptación parcial de Eve, modelos
-de ruido calibrados, detector estadístico, experimentos completos y gráficas.
-La guía [docs/INTEGRACION.md](docs/INTEGRACION.md) explica qué puede reutilizar
-cada integrante y cómo están organizados los datos.
+## Funcionalidades implementadas
+
+### 1. Protocolo BB84
+
+- Generación de bits y bases aleatorias para Alice.
+- Preparación de estados cuánticos en bases Z y X.
+- Medición de Bob en bases aleatorias.
+- Cribado de posiciones con bases coincidentes.
+- Cálculo del QBER.
+- Selección de muestras públicas sin reemplazo.
+- Retirada de los bits revelados de la clave restante.
+
+### 2. Ataque de Eve y ruido
+
+- Ataque intercept-resend con interceptación parcial.
+- Fracciones de interceptación entre 0 y 1.
+- Medición y retransmisión de señales por Eve.
+- Ruido despolarizante del canal.
+- Errores de lectura configurables.
+- Semillas para reproducibilidad experimental.
+
+### 3. Detección estadística
+
+El detector utiliza una prueba binomial unilateral:
+
+- H0: el QBER corresponde al ruido basal del canal.
+- H1: el QBER supera el nivel esperado.
+
+Se calcula un valor-p utilizando el número de errores de la
+muestra pública.
+
+El nivel de significancia utilizado es alpha = 0.05.
+
+Se declara una anomalía estadísticamente significativa cuando
+el valor-p es menor o igual a alpha.
+
+La detección de un exceso de errores no demuestra por sí sola
+la presencia de Eve, porque también pueden existir otras
+fuentes de ruido no modeladas.
+
+### 4. Experimentos y visualizaciones
+
+Se implementaron:
+
+- Calibración del ruido basal.
+- Experimentos con diferentes fracciones de interceptación.
+- Comparación de tamaños de muestra.
+- Medición de tasas de detección.
+- Medición de falsos positivos.
+- Gráficas de QBER y curvas ROC.
+- Validación estadística con sesiones independientes.
 
 ## Instalación
 
-Usamos **Python 3.12**. La ejecución es local con Qiskit Aer.
+El proyecto utiliza Python y Qiskit Aer.
+
+### Windows con PowerShell
+
+```powershell
+git clone https://github.com/Jfrc72/Proyecto-BB84.git
+cd Proyecto-BB84
+
+py -3.12 -m venv .venv
+
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+Si se utiliza otra versión compatible de Python, debe
+verificarse la disponibilidad de las dependencias.
 
 ### macOS o Linux
 
 ```bash
 git clone https://github.com/Jfrc72/Proyecto-BB84.git
 cd Proyecto-BB84
+
 python3.12 -m venv .venv
 source .venv/bin/activate
+
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### Windows, con PowerShell
+En los comandos siguientes se utiliza `python`. En Windows,
+puede reemplazarse por `.\.venv\Scripts\python.exe`.
 
-```powershell
-git clone https://github.com/Jfrc72/Proyecto-BB84.git
-cd Proyecto-BB84
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
+## Ejecución
 
-En Windows se pueden ejecutar los comandos siguientes reemplazando `python`
-por `.\.venv\Scripts\python.exe`.
-
-En macOS o Linux hay que volver a activar el entorno con
-`source .venv/bin/activate` cuando se abre una terminal nueva.
-
-## Ejecutar la demostración
+### Demostración del protocolo ideal
 
 ```bash
 python demo.py
@@ -65,118 +120,261 @@ python demo.py --circuitos
 python demo.py --guardar resultados/sesion_ideal.json
 ```
 
-- `--senales`: cantidad de señales enviadas, antes de comparar las bases.
-- `--muestra`: cantidad de bits **ya cribados** que se comparan públicamente.
-- `--semilla`: permite repetir la sesión con las mismas versiones y opciones.
-- `--circuitos`: imprime los cuatro circuitos con bases iguales.
-- `--guardar`: guarda los datos, las semillas y las versiones en un JSON.
+Parámetros:
 
-Con las dependencias de `requirements.txt`, los valores por defecto dieron:
+- `--senales`: cantidad de señales enviadas.
+- `--muestra`: cantidad de bits cribados revelados.
+- `--semilla`: semilla para reproducibilidad.
+- `--circuitos`: muestra circuitos cuánticos.
+- `--guardar`: exporta resultados en JSON.
 
-```text
-Senales enviadas: 4096
-Bits cribados: 2075 (50.7%)
-Errores en la clave cribada: 0
-QBER de la clave cribada: 0.00%
-Muestra publica: 256 bits
-Errores en la muestra: 0
-Bits restantes tras retirar la muestra: 1819
+### Simulación de Eve y ruido
+
+```bash
+python demo_eve_ruido.py
 ```
 
-El número de bits cribados fluctúa al cambiar la semilla. Aproximadamente la
-mitad de las bases coinciden. En el caso ideal, los bits que quedan sí coinciden
-siempre y su QBER es cero.
+Ejecuta escenarios ideales, ataques parciales de Eve,
+ruido del canal y combinaciones de ataque y ruido.
 
-Si se pide una muestra mayor que la clave cribada disponible, el programa avisa.
-En ese caso hay que aumentar `--senales`; no se reduce la muestra en silencio.
+### Calibración del ruido
 
-## Qué hace el código
+```bash
+python calibrar_ruido.py
+```
 
-1. Alice genera bits aleatorios y elige una base aleatoria por señal.
-2. Se prepara un qubit según esta tabla:
+Permite estudiar el QBER basal del canal sin Eve.
 
-| Base | Bit 0 | Bit 1 |
+### Detección estadística
+
+```bash
+python demo_deteccion.py
+```
+
+Ejecuta escenarios con y sin Eve y calcula:
+
+- QBER observado.
+- QBER basal.
+- Número de errores.
+- Valor-p binomial.
+- Decisión estadística.
+- Longitud restante de la clave.
+
+### Experimentos piloto
+
+```bash
+python experimentos.py
+```
+
+Ejecuta 300 simulaciones distribuidas entre:
+
+- Interceptación: 0 %, 10 %, 25 %, 50 % y 100 %.
+- Ruido basal: 1 % y 3 %.
+- Muestras: 128, 256 y 512 bits.
+- 10 repeticiones por configuración.
+
+Los resultados se guardan en:
+
+`resultados/experimentos_bb84.csv`
+
+### Generación de gráficas
+
+```bash
+python graficas.py
+```
+
+Genera:
+
+- `01_qber_vs_eve.png`
+- `02_detection_rate.png`
+- `03_false_positives.png`
+- `04_roc_curves.png`
+
+También exporta `resultados/resumen_experimentos.csv`.
+
+### Validación estadística final
+
+```bash
+python validacion_final.py
+python analisis_validacion.py
+```
+
+La validación utiliza:
+
+- Eve: 0 % y 10 %.
+- Ruido basal: 1 % y 3 %.
+- Muestras: 128, 256 y 512 bits.
+- 100 sesiones independientes por combinación de ruido y ataque.
+
+En total se ejecutan 400 sesiones cuánticas y 1200
+evaluaciones estadísticas.
+
+Las tres muestras de una misma sesión son anidadas y
+no constituyen sesiones independientes entre sí.
+
+## Resultados experimentales
+
+### Calibración
+
+En las pruebas de calibración, los niveles basales
+observados estuvieron próximos a los objetivos:
+
+| QBER objetivo | QBER observado |
+|---|---|
+| 0 % | 0 % |
+| 1 % | 0.992 % |
+| 3 % | 3.036 % |
+
+### Detección de Eve al 10 %
+
+Resultados de 100 sesiones por configuración:
+
+| Muestra | Ruido 1 % | Ruido 3 % |
 |---|---|---|
-| Z | `|0>`: no aplicar compuertas | `|1>`: aplicar X |
-| X | `|+>`: aplicar H | `|->`: aplicar X y después H |
+| 128 bits | 64 % | 41 % |
+| 256 bits | 87 % | 64 % |
+| 512 bits | 99 % | 85 % |
 
-3. Bob elige sus bases de forma independiente. Para medir en Z mide
-   directamente; para medir en X aplica H antes de medir en Z.
-4. Alice y Bob anuncian sus bases. Se conservan únicamente las posiciones donde
-   coinciden, respetando el orden. Eso es el cribado.
-5. La QBER es `errores / bits comparados`. Las funciones devuelven una fracción
-   entre 0 y 1; la demostración la muestra como porcentaje.
-6. Se escogen `m` posiciones aleatorias, sin reemplazo, de la clave cribada.
-   Los bits revelados para esta comparación se retiran de las claves restantes.
+### Falsos positivos
 
-En la simulación podemos calcular la QBER de toda la clave para verificar el
-código. El detector del proyecto debe usar la muestra pública y la calibración;
-no puede usar como ayuda los bits restantes ni saber de antemano si había Eve.
+| Muestra | Ruido 1 % | Ruido 3 % |
+|---|---|---|
+| 128 bits | 6 % | 3 % |
+| 256 bits | 5 % | 3 % |
+| 512 bits | 3 % | 4 % |
 
-## Organización
+Los resultados son compatibles con el nivel de
+significancia del 5 %, considerando la variabilidad
+estadística de las simulaciones.
 
-```text
-Proyecto-BB84/
-├── bb84.py                    # Funciones del protocolo ideal
-├── demo.py                    # Ejecución y exportación de una sesión
-├── requirements.txt           # Dependencias usadas
-├── config_experimentos.json   # Escenarios acordados en la propuesta
-├── docs/
-│   └── INTEGRACION.md          # Acuerdo de datos y próximos pasos
-└── tests/
-    └── test_bb84.py            # Pruebas del protocolo y de la demostración
-```
+### QBER promedio
 
-`resultados/` y `.venv/` quedan fuera de Git. El JSON de demostración contiene
-bits y claves completos para inspeccionar el experimento.
+| Escenario | 128 bits | 256 bits | 512 bits |
+|---|---|---|---|
+| Sin Eve, ruido 1 % | 0.94 % | 0.91 % | 0.95 % |
+| Eve 10 %, ruido 1 % | 3.37 % | 3.44 % | 3.61 % |
+| Sin Eve, ruido 3 % | 2.91 % | 2.98 % | 3.10 % |
+| Eve 10 %, ruido 3 % | 5.34 % | 5.33 % | 5.37 % |
 
-## Comprobar la base
+## Interpretación de resultados
+
+Los experimentos muestran que el QBER aumenta cuando
+Eve intercepta una mayor proporción de señales.
+
+El tamaño de muestra influye directamente en la
+capacidad estadística de detectar ataques débiles.
+
+Con ruido basal del 1 %, la detección de Eve al 10 %
+aumentó del 64 % al 99 % al pasar de 128 a 512 bits.
+
+Con ruido basal del 3 %, aumentó del 41 % al 85 %.
+
+El ruido adicional dificulta distinguir los errores
+provocados por Eve de los errores habituales del canal.
+
+Los falsos positivos observados estuvieron entre
+el 3 % y el 6 % en la validación final.
+
+## Pruebas automatizadas
 
 ```bash
 python -m unittest discover -s tests -v
 python -m pip check
 ```
 
-Las pruebas comprueban los cuatro estados, la recuperación del bit al coincidir
-las bases, el comportamiento aleatorio con bases distintas, el cribado, los
-errores de QBER, las semillas, el muestreo y la exportación de la demostración.
-También se pasa un simulador con lectura invertida para comprobar que la
-función realmente utiliza las mediciones del backend externo.
+Se implementaron 33 pruebas automatizadas:
 
-## Experimentos acordados
+- 13 pruebas del protocolo BB84.
+- 10 pruebas de Eve y ruido.
+- 10 pruebas del detector estadístico.
 
-`config_experimentos.json` registra lo que se ejecutará cuando estén las otras
-partes: fracciones de interceptación `0, 0.10, 0.25, 0.50, 1.00`; ruido ideal
-y configuraciones con QBER basal cercana al 1 % y al 3 %; muestras de 64, 256
-y 1024 bits; al menos 300 sesiones independientes por combinación.
+La última ejecución reportó 33 pruebas exitosas.
 
-Esos niveles de QBER son objetivos de calibración, no probabilidades de ruido
-que se puedan pasar directamente a una compuerta. Daniel medirá la QBER basal
-real de cada modelo. Tomás elegirá el umbral usando solo sesiones sin Eve y lo
-evaluará en sesiones nuevas. Buscamos al menos 90 % de detección y máximo 5 %
-de falsas alarmas; si una combinación no cumple, se reportará así.
+## Organización
 
-## Supuestos y límites
+```text
+Proyecto-BB84/
+├── bb84.py
+├── demo.py
+├── eve_ruido.py
+├── demo_eve_ruido.py
+├── calibrar_ruido.py
+├── deteccion_qber.py
+├── demo_deteccion.py
+├── experimentos.py
+├── graficas.py
+├── validacion_final.py
+├── analisis_validacion.py
+├── config_experimentos.json
+├── requirements.txt
+├── README.md
+├── docs/
+│   └── INTEGRACION.md
+├── tests/
+│   ├── test_bb84.py
+│   ├── test_eve_ruido.py
+│   └── test_deteccion_qber.py
+└── resultados/
+    ├── experimentos_bb84.csv
+    ├── resumen_experimentos.csv
+    ├── validacion_final.csv
+    ├── resumen_validacion.csv
+    └── graficas/
+```
 
-Esta base modela señales independientes, un qubit por señal, y un canal clásico
-autenticado para anunciar las bases. Para acelerar la simulación se agrupan las
-señales con la misma preparación y bases: cada una recibe su propia medición
-de un shot de Aer, que se devuelve a su posición original. No se construye un
-estado entrelazado de miles de qubits.
+La carpeta `resultados/` se genera localmente y está
+excluida de Git mediante `.gitignore`.
 
-Los circuitos conservan las compuertas de preparación y lectura, sin eliminar
-pares de H. Esto permite añadir ruido a esas operaciones después. La agrupación
-supone que el canal no tiene memoria ni correlaciones entre señales.
+## Experimentos acordados en la propuesta
 
-Las semillas son para reproducir experimentos; no son un generador de claves
-para uso real. No implementamos reconciliación de errores ni amplificación de
-privacidad. Tener QBER cero en una simulación ideal no demuestra la seguridad
-general de BB84. Cambiar versiones, backend u opciones puede cambiar la secuencia
-aleatoria incluso usando la misma semilla.
+El archivo `config_experimentos.json` describe el diseño
+experimental originalmente acordado:
+
+- Interceptación: 0, 0.10, 0.25, 0.50 y 1.00.
+- Canal ideal y ruido basal cercano al 1 % y 3 %.
+- Muestras de 64, 256 y 1024 bits.
+- Al menos 300 sesiones independientes por combinación.
+
+Los experimentos implementados hasta ahora son un piloto
+y una validación complementaria.
+
+Por tanto, todavía no se ha ejecutado íntegramente
+el diseño establecido en la configuración original.
+
+Los objetivos de desempeño propuestos son alcanzar
+al menos 90 % de detección y como máximo 5 % de falsas
+alarmas. Las configuraciones que no los cumplan deben
+reportarse sin modificar los resultados.
+
+## Supuestos y limitaciones
+
+El simulador utiliza señales independientes y un qubit
+por señal, con un canal clásico autenticado para el
+anuncio de bases.
+
+Las semillas permiten reproducir los experimentos,
+pero no representan un mecanismo criptográfico seguro
+para generar claves reales.
+
+No se implementan reconciliación de errores ni
+amplificación de privacidad.
+
+El detector presupone un nivel de ruido basal conocido.
+En una implementación real, ese nivel debe estimarse
+independientemente y considerar su incertidumbre.
+
+Los bits revelados públicamente deben excluirse de
+cualquier clave criptográfica final.
+
+Los resultados experimentales dependen del modelo
+de ruido, del ataque simulado y de las condiciones
+evaluadas. No constituyen una demostración general
+de seguridad del protocolo BB84.
 
 ## Referencias
 
 - [Bennett y Brassard, BB84 (1984), reimpresión](https://arxiv.org/abs/2003.06557).
 - [Qiskit: QuantumCircuit](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.circuit.QuantumCircuit).
-- [Qiskit Aer: simuladores y mediciones por shot](https://qiskit.github.io/qiskit-aer/tutorials/1_aersimulator.html).
+- [Qiskit Aer: simuladores](https://qiskit.github.io/qiskit-aer/tutorials/1_aersimulator.html).
 - [Qiskit Aer: modelos de ruido](https://qiskit.github.io/qiskit-aer/tutorials/3_building_noise_models.html).
+```
